@@ -4,7 +4,9 @@ import torch.nn.functional as F
 import time
 import myHippo
 
-enableHippo = False
+enableHippoA = False
+enableHippoB = True
+
 debug = True
 
 class CenterNN(nn.Module):
@@ -24,6 +26,10 @@ class CenterNN(nn.Module):
         self.hippo = myHippo.myHippo(memDepth, memWidth)
         self.divToP = int(memWidth * exciterRatio)
         self.divToN = memWidth - self.divToP
+
+        self.advanceHippoInputWarpper = nn.Linear(num, memWidth)
+        self.advanceHippoOutputWarpper = nn.Linear(memWidth, num)
+
         if debug:
             self.fNeuro = open('Neuro.txt', 'a')
             self.fHippoIO = open('HippoIO.txt', 'a')
@@ -55,14 +61,25 @@ class CenterNN(nn.Module):
         x[:, self.pNum+self.divToN:self.pNum+self.divToN*2] = cut2
         return x
 
+    def HippoInterface2(self, x):
+        x = self.advanceHippoInputWarpper(x)
+        x = self.hippo.inferencer(x[0]).view(1, self.hippo.poolDim)
+        if debug:
+            print('Hippo Output: ', x)
+            self.fHippoIO.write(str(x))
+        x = self.advanceHippoOutputWarpper(x)
+        return x
+
     def forward(self):
         while True:
             if debug:
                 print(self.dataBuf)
                 self.fNeuro.write(str(self.dataBuf))
             x = self.MindArea(self.dataBuf)
-            if enableHippo:
+            if enableHippoA:
                 x = self.HippoInteface(x)
+            if enableHippoB:
+                x = self.HippoInterface2(x)
             self.dataBuf = x
             time.sleep(1)
     
