@@ -1,0 +1,7 @@
+# ninja log v5
+0	21222	1670409963351686628	/root/ArtificialBrain/myBionicCell_backend/build/temp.linux-x86_64-3.8/myBionicCell.o	c5844b7c3a707626
+1	22916	1670409965035676250	/root/ArtificialBrain/myBionicCell_backend/build/temp.linux-x86_64-3.8/myBionicCellCPU.o	8e5c56a798f8a01c
+0	68940	1670410011123388824	/root/ArtificialBrain/myBionicCell_backend/build/temp.linux-x86_64-3.8/myBionicCellGPU.o	132f479015b9742a
+13	21673	1670410920906736620	/root/ArtificialBrain/myBionicCell_backend/build/temp.linux-x86_64-3.8/myBionicCell.o	c5844b7c3a707626
+13	22769	1670410921990730095	/root/ArtificialBrain/myBionicCell_backend/build/temp.linux-x86_64-3.8/myBionicCellCPU.o	8e5c56a798f8a01c
+13	69940	1670410969222453770	/root/ArtificialBrain/myBionicCell_backend/build/temp.linux-x86_64-3.8/myBionicCellGPU.o	132f479015b9742a
