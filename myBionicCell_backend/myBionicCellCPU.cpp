@@ -22,14 +22,18 @@
 
 #include <torch/extension.h>
 
-
 #include <vector>
 
-void myBioCell_forward_kernel_cpu(int BatchID, int CellID, const float* input, const float* weight, float* output, const int Neuros, const int InputDim) 
+#define CellEnergy 3.0
+#define PoolEnergy 10.0
+#define RecoveryRate 0.4;
+
+void myBioCell_forward_kernel_cpu(int BatchID, int CellID, const float* input, const float* weight, float *remain, float* output, const int Neuros, const int InputDim) 
 {
 	//Here InputDim == NumberOfSynapses
 	const float *myWeightBase = weight + CellID * InputDim;
 	const float *myInputBase = input + BatchID * InputDim;
+	float *myRemain = remain + CellID;
 	float *myOutput = output + BatchID * Neuros + CellID;
 	
 	*myOutput = 0.0;
@@ -39,6 +43,28 @@ void myBioCell_forward_kernel_cpu(int BatchID, int CellID, const float* input, c
 		*myOutput += myWeightBase[i] * myInputBase[i];
 		//printf("myOutput = %f\n", *myOutput);
 	}
+	
+	float remainRate = *myRemain / CellEnergy;
+
+	if(remainRate > 0.0)
+	{
+		printf("Great! We have remaining energy %f\%\n", remainRate * 100);
+		*myOutput *= remainRate;
+		float myOutputABS = 0.0;
+		if(*myOutput > 0.0)
+                	myOutputABS = *myOutput;
+        	else
+                	myOutputABS = 0 - *myOutput;
+		*myRemain -= myOutputABS;
+
+	}
+	else
+	{
+		printf("Emmm remaining energy %f\%\n", remainRate * 100);
+		*myOutput = 0.0;
+	}
+
+	*myRemain += PoolEnergy * RecoveryRate;
 
 	return;
 }
@@ -46,7 +72,7 @@ void myBioCell_forward_kernel_cpu(int BatchID, int CellID, const float* input, c
 std::vector<torch::Tensor> mybiocell_cpu_forward(
     torch::Tensor input,
     torch::Tensor weights,
-    torch::Tensor consume)
+    torch::Tensor remain)
 {
     const int Batchsize = input.size(0);
     const int InputDim = input.size(1);
@@ -57,6 +83,7 @@ std::vector<torch::Tensor> mybiocell_cpu_forward(
     float *pCPUinput = input.data_ptr<float>();
     float *pCPUweights = weights.data_ptr<float>();
     float *pCPUoutput = output.data_ptr<float>();
+    float *pCPUremain = remain.data_ptr<float>();
 
     /*
     printf("pCPUinput = 0x%x\n", pCPUinput);
@@ -70,7 +97,7 @@ std::vector<torch::Tensor> mybiocell_cpu_forward(
 
     for(int i = 0; i < Batchsize; i++)
         for(int j = 0; j < Neuros; j++)
-    	    myBioCell_forward_kernel_cpu(i, j, pCPUinput, pCPUweights, pCPUoutput, Neuros, InputDim);
+    	    myBioCell_forward_kernel_cpu(i, j, pCPUinput, pCPUweights, pCPUremain, pCPUoutput, Neuros, InputDim);
 
     return {output};
 }
