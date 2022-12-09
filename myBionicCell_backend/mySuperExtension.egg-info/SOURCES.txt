@@ -3,6 +3,7 @@ myBionicCell.cpp
 myBionicCellCPU.cpp
 myBionicCellGPU.cu
 setup.py
+dist/mySuperExtension-0.0.0-py3.8-linux-x86_64.egg
 mySuperExtension.egg-info/PKG-INFO
 mySuperExtension.egg-info/SOURCES.txt
 mySuperExtension.egg-info/dependency_links.txt

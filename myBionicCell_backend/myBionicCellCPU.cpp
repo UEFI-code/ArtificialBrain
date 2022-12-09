@@ -25,7 +25,7 @@
 #include <vector>
 
 #define CellEnergy 3.0
-#define PoolEnergy 10.0
+#define PoolEnergy 3.0
 #define RecoveryRate 0.4;
 
 void myBioCell_forward_kernel_cpu(int BatchID, int CellID, const float* input, const float* weight, float *remain, float* output, const int Neuros, const int InputDim) 
@@ -65,6 +65,8 @@ void myBioCell_forward_kernel_cpu(int BatchID, int CellID, const float* input, c
 	}
 
 	*myRemain += PoolEnergy * RecoveryRate;
+	if(*myRemain > CellEnergy)
+		*myRemain = CellEnergy;
 
 	return;
 }
