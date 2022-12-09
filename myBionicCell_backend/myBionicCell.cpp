@@ -29,13 +29,15 @@
 std::vector<torch::Tensor> mybiocell_cuda_forward(
     torch::Tensor input,
     torch::Tensor weights,
-    torch::Tensor remain);
+    torch::Tensor remain,
+    float cellenergymax);
 
 //CPU function declarition
 std::vector<torch::Tensor> mybiocell_cpu_forward(
     torch::Tensor input,
     torch::Tensor weights,
-    torch::Tensor remain);
+    torch::Tensor remain,
+    float cellenergymax);
 
 // C++ interface
 
@@ -46,12 +48,13 @@ std::vector<torch::Tensor> mybiocell_cpu_forward(
 std::vector<torch::Tensor> mybiocell_forward(
     torch::Tensor input,
     torch::Tensor weights,
-    torch::Tensor remain) 
+    torch::Tensor remain,
+    float cellenergymax) 
 {
     if(input.type().is_cuda())
-	    return mybiocell_cuda_forward(input, weights, remain);
+	    return mybiocell_cuda_forward(input, weights, remain, cellenergymax);
     else
-	    return mybiocell_cpu_forward(input, weights, remain);
+	    return mybiocell_cpu_forward(input, weights, remain, cellenergymax);
 }
 
 PYBIND11_MODULE(TORCH_EXTENSION_NAME, m) {

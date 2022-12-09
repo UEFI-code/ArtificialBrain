@@ -24,11 +24,10 @@
 
 #include <vector>
 
-#define CellEnergy 3.0
 #define PoolEnergy 3.0
 #define RecoveryRate 0.4;
 
-void myBioCell_forward_kernel_cpu(int BatchID, int CellID, const float* input, const float* weight, float *remain, float* output, const int Neuros, const int InputDim) 
+void myBioCell_forward_kernel_cpu(int BatchID, int CellID, const float* input, const float* weight, float *remain, float CellEnergyMax, float* output, const int Neuros, const int InputDim) 
 {
 	//Here InputDim == NumberOfSynapses
 	const float *myWeightBase = weight + CellID * InputDim;
@@ -44,7 +43,7 @@ void myBioCell_forward_kernel_cpu(int BatchID, int CellID, const float* input, c
 		//printf("myOutput = %f\n", *myOutput);
 	}
 	
-	float remainRate = *myRemain / CellEnergy;
+	float remainRate = *myRemain / CellEnergyMax;
 
 	if(remainRate > 0.0)
 	{
@@ -56,7 +55,6 @@ void myBioCell_forward_kernel_cpu(int BatchID, int CellID, const float* input, c
         	else
                 	myOutputABS = 0 - *myOutput;
 		*myRemain -= myOutputABS;
-
 	}
 	else
 	{
@@ -65,8 +63,8 @@ void myBioCell_forward_kernel_cpu(int BatchID, int CellID, const float* input, c
 	}
 
 	*myRemain += PoolEnergy * RecoveryRate;
-	if(*myRemain > CellEnergy)
-		*myRemain = CellEnergy;
+	if(*myRemain > CellEnergyMax)
+		*myRemain = CellEnergyMax;
 
 	return;
 }
@@ -74,7 +72,8 @@ void myBioCell_forward_kernel_cpu(int BatchID, int CellID, const float* input, c
 std::vector<torch::Tensor> mybiocell_cpu_forward(
     torch::Tensor input,
     torch::Tensor weights,
-    torch::Tensor remain)
+    torch::Tensor remain,
+    float cellenergymax)
 {
     const int Batchsize = input.size(0);
     const int InputDim = input.size(1);
@@ -99,7 +98,7 @@ std::vector<torch::Tensor> mybiocell_cpu_forward(
 
     for(int i = 0; i < Batchsize; i++)
         for(int j = 0; j < Neuros; j++)
-    	    myBioCell_forward_kernel_cpu(i, j, pCPUinput, pCPUweights, pCPUremain, pCPUoutput, Neuros, InputDim);
+    	    myBioCell_forward_kernel_cpu(i, j, pCPUinput, pCPUweights, pCPUremain, cellenergymax, pCPUoutput, Neuros, InputDim);
 
     return {output};
 }

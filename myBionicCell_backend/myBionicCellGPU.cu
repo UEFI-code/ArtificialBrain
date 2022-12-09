@@ -27,11 +27,10 @@
 
 #include <vector>
 
-#define CellEnergy 3.0
 #define PoolEnergy 3.0
 #define RecoveryRate 0.4;
 
-__global__ void myBioCell_forward_kernel(const float* input, const float* weight, float *remain, float* output, const int Neuros, const int InputDim) 
+__global__ void myBioCell_forward_kernel(const float* input, const float* weight, float *remain, float CellEnergyMax, float* output, const int Neuros, const int InputDim) 
 {
 	//Here InputDim == NumberOfSynapses
 	const int CellID = threadIdx.x;
@@ -48,7 +47,7 @@ __global__ void myBioCell_forward_kernel(const float* input, const float* weight
 		*myOutput += myWeightBase[i] * myInputBase[i];
 	}
 
-	float remainRate = *myRemain / CellEnergy;
+	float remainRate = *myRemain / CellEnergyMax;
 
         if(remainRate > 0.0)
         {
@@ -69,8 +68,8 @@ __global__ void myBioCell_forward_kernel(const float* input, const float* weight
 
         *myRemain += PoolEnergy * RecoveryRate;
 
-	if(*myRemain > CellEnergy)
-                *myRemain = CellEnergy;
+	if(*myRemain > CellEnergyMax)
+                *myRemain = CellEnergyMax;
 
 	return;
 }
@@ -78,7 +77,8 @@ __global__ void myBioCell_forward_kernel(const float* input, const float* weight
 std::vector<torch::Tensor> mybiocell_cuda_forward(
     torch::Tensor input,
     torch::Tensor weights,
-    torch::Tensor remain)
+    torch::Tensor remain,
+    float cellenergymax)
 {
     const int Batchsize = input.size(0);
     const int InputDim = input.size(1);
@@ -91,7 +91,7 @@ std::vector<torch::Tensor> mybiocell_cuda_forward(
     float *pGPUremain = remain.data<float>();
     float *pGPUoutput = output.data<float>();
     
-    myBioCell_forward_kernel<<<Batchsize, Neuros>>>(pGPUinput, pGPUweights, pGPUremain, pGPUoutput, Neuros, InputDim);
+    myBioCell_forward_kernel<<<Batchsize, Neuros>>>(pGPUinput, pGPUweights, pGPUremain, cellenergymax, pGPUoutput, Neuros, InputDim);
 
     return {output};
 }
